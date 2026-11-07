@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國小自然課堂：骨骼與肌肉運動模型</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Inter & Noto Sans TC -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #F3F4F6;
+            touch-action: manipulation;
+        }
+        /* Custom range slider style */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 12px;
+            cursor: pointer;
+            background: #E5E7EB;
+            border-radius: 6px;
+            border: 2px solid #D1D5DB;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            height: 28px;
+            width: 28px;
+            border-radius: 50%;
+            background: #3B82F6;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -10px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 3px solid white;
+            transition: transform 0.1s ease;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+        /* Glassmorphic styles for cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(229, 231, 235, 0.8);
+        }
+        /* Glowing pulse animation for contracting muscle */
+        @keyframes musclePulse {
+            0%, 100% { filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.6)); }
+            50% { filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.9)); }
+        }
+        .contracting-glow {
+            animation: musclePulse 1.5s infinite;
+        }
+
+        /* Glowing pulse animation for contracting blue muscle (Triceps) */
+        @keyframes musclePulseBlue {
+            0%, 100% { filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.6)); }
+            50% { filter: drop-shadow(0 0 15px rgba(37, 99, 235, 0.9)); }
+        }
+        .contracting-glow-blue {
+            animation: musclePulseBlue 1.5s infinite;
+        }
+    </style>
+</head>
+<body class="bg-amber-50 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Header Navigation Bar -->
+    <header class="bg-amber-400 border-b-4 border-amber-500 shadow-md py-3 px-4 md:px-8">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-white p-2.5 rounded-2xl shadow-inner text-amber-600 text-2xl font-black">
+                    <i class="fa-solid fa-bone"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black text-slate-900 tracking-wide flex items-center gap-2">
+                        國小自然科互動教具：肌肉與骨骼的運動
+                    </h1>
+                    <p class="text-xs md:text-sm font-semibold text-amber-900">單元：人體的運動與保健 | 授課者：張老師</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button id="toggleLabelsBtn" onclick="toggleLabels()" class="px-4 py-2 bg-white hover:bg-amber-100 text-amber-900 font-bold rounded-xl shadow border-2 border-amber-300 transition-all flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-tag text-amber-600"></i>
+                    <span id="labelBtnText">隱藏構造標籤</span>
+                </button>
+                <button onclick="resetModel()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow border-2 border-amber-700 transition-all flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>重置角度</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto w-full p-4 md:p-6 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Interactive Canvas Model (7 cols on LG) -->
+        <section class="lg:col-span-7 flex flex-col items-center">
+            <div class="w-full glass-card rounded-3xl shadow-xl p-4 md:p-6 border-2 border-amber-200 flex flex-col items-center relative overflow-hidden">
+                
+                <!-- Notice Banner -->
+                <div class="w-full mb-3 flex justify-between items-center bg-amber-100/80 px-4 py-2 rounded-xl text-xs md:text-sm font-bold text-amber-900">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle-info text-amber-600"></i> 提示：拖曳滑桿或點擊構造查看詳細說明！</span>
+                    <span id="angleDisplay" class="bg-amber-500 text-white px-2.5 py-0.5 rounded-full font-mono font-bold">彎曲角度: 45°</span>
+                </div>
+
+                <!-- Interactive SVG Canvas -->
+                <div class="relative w-full aspect-[4/3] max-h-[480px] bg-gradient-to-b from-sky-50 via-white to-amber-50/30 rounded-2xl border-2 border-slate-200 flex items-center justify-center shadow-inner overflow-hidden">
+                    
+                    <svg id="armSvg" viewBox="0 0 800 600" class="w-full h-full select-none cursor-pointer">
+                        <defs>
+                            <!-- Muscle Texture Patterns / Gradients -->
+                            <linearGradient id="bicepsContracted" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#EF4444" />
+                                <stop offset="50%" stop-color="#DC2626" />
+                                <stop offset="100%" stop-color="#991B1B" />
+                            </linearGradient>
+                            <linearGradient id="bicepsRelaxed" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#FCA5A5" />
+                                <stop offset="100%" stop-color="#F87171" />
+                            </linearGradient>
+
+                            <!-- Triceps Muscle Gradients (Blue Theme for contrast) -->
+                            <linearGradient id="tricepsContracted" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#3B82F6" />
+                                <stop offset="50%" stop-color="#2563EB" />
+                                <stop offset="100%" stop-color="#1E3A8A" />
+                            </linearGradient>
+                            <linearGradient id="tricepsRelaxed" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#93C5FD" />
+                                <stop offset="100%" stop-color="#60A5FA" />
+                            </linearGradient>
+
+                            <!-- Bone Gradient -->
+                            <linearGradient id="boneGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#FFFBEB" />
+                                <stop offset="50%" stop-color="#FEF3C7" />
+                                <stop offset="100%" stop-color="#FDE68A" />
+                            </linearGradient>
+
+                            <!-- Drop Shadows -->
+                            <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+                                <feDropShadow dx="2" dy="4" stdDeviation="4" flood-opacity="0.15" />
+                            </filter>
+                        </defs>
+
+                        <!-- Background Grid lines for visual depth -->
+                        <g opacity="0.15">
+                            <line x1="0" y1="150" x2="800" y2="150" stroke="#94A3B8" stroke-dasharray="5 5" />
+                            <line x1="0" y1="300" x2="800" y2="300" stroke="#94A3B8" stroke-dasharray="5 5" />
+                            <line x1="0" y1="450" x2="800" y2="450" stroke="#94A3B8" stroke-dasharray="5 5" />
+                            <line x1="400" y1="0" x2="400" y2="600" stroke="#94A3B8" stroke-dasharray="5 5" />
+                        </g>
+
+                        <!-- Shoulder / Upper Body Support Anchor -->
+                        <g id="shoulderAnchor">
+                            <path d="M 120 100 C 220 80 260 140 280 180 C 240 220 180 240 120 200 Z" fill="#E2E8F0" stroke="#94A3B8" stroke-width="4" filter="url(#shadow)"/>
+                            <text x="170" y="145" class="font-bold text-xs fill-slate-500">肩帶骨骼/軀幹固定端</text>
+                        </g>
+
+                        <!-- Upper Arm Bone (Humerus) - Fixed horizontally -->
+                        <g id="humerusGroup" onclick="selectPart('humerus')">
+                            <!-- Humerus Bone Shape -->
+                            <path d="M 230 200 L 450 200 C 470 200 480 190 480 200 C 480 210 470 220 450 220 L 230 220 C 210 220 200 210 200 200 C 200 190 210 200 230 200 Z" 
+                                  fill="url(#boneGrad)" stroke="#D97706" stroke-width="4" filter="url(#shadow)"/>
+                            <!-- Bone Head End Caps -->
+                            <circle cx="215" cy="200" r="22" fill="url(#boneGrad)" stroke="#D97706" stroke-width="4"/>
+                            <circle cx="465" cy="200" r="24" fill="url(#boneGrad)" stroke="#D97706" stroke-width="4"/>
+                        </g>
+
+                        <!-- Dynamic Group: Forearm + Hand (Rotates around elbow joint at (465, 200)) -->
+                        <g id="forearmGroup">
+                            <!-- Forearm Bones (Radius & Ulna) -->
+                            <g id="radiusUlnaGroup" onclick="selectPart('radius')">
+                                <!-- Ulna (Main support) -->
+                                <path d="M 465 190 L 710 190 C 725 190 730 200 710 200 L 465 200 Z" fill="url(#boneGrad)" stroke="#D97706" stroke-width="3"/>
+                                <!-- Radius (Parallel bone) -->
+                                <path d="M 475 208 L 705 208 C 720 208 725 218 705 218 L 475 218 Z" fill="url(#boneGrad)" stroke="#D97706" stroke-width="3"/>
+                                <!-- Wrist Bone Ball -->
+                                <circle cx="715" cy="204" r="16" fill="url(#boneGrad)" stroke="#D97706" stroke-width="3"/>
+                            </g>
+
+                            <!-- Hand Silhouette for realistic look -->
+                            <g id="handGroup" fill="#FED7AA" stroke="#F97316" stroke-width="3">
+                                <path d="M 725 190 C 750 185 770 195 785 200 C 795 205 790 215 780 215 L 760 215 C 770 220 770 228 755 225 L 730 220 Z"/>
+                            </g>
+
+                            <!-- Tendon Insertions on Forearm (Dynamic connection targets) -->
+                            <circle id="bicepsTendonAttach" cx="520" cy="190" r="5" fill="#E2E8F0" stroke="#64748B" stroke-width="2"/>
+                            <circle id="tricepsTendonAttach" cx="445" cy="215" r="5" fill="#E2E8F0" stroke="#64748B" stroke-width="2"/>
+                        </g>
+
+                        <!-- Biceps Muscle Group (Top side) -->
+                        <g id="bicepsGroup" class="cursor-pointer" onclick="selectPart('biceps')">
+                            <!-- Tendon Upper -->
+                            <path id="bicepsTendonTop" d="M 230 185 L 260 170" stroke="#E2E8F0" stroke-width="8" stroke-linecap="round"/>
+                            <!-- Tendon Lower (Dynamic, updated in JS) -->
+                            <path id="bicepsTendonBottom" d="M 420 170 L 520 190" stroke="#E2E8F0" stroke-width="8" stroke-linecap="round"/>
+                            <!-- Muscle Belly (Dynamic SVG Path) -->
+                            <path id="bicepsBelly" d="" fill="url(#bicepsContracted)" stroke="#B91C1C" stroke-width="3" filter="url(#shadow)"/>
+                            <!-- Muscle Fiber Stripes (Detail) -->
+                            <path id="bicepsFibers" d="" stroke="rgba(255,255,255,0.4)" stroke-width="2" fill="none" stroke-dasharray="4 4"/>
+                        </g>
+
+                        <!-- Triceps Muscle Group (Bottom side) -->
+                        <g id="tricepsGroup" class="cursor-pointer" onclick="selectPart('triceps')">
+                            <!-- Tendon Upper -->
+                            <path id="tricepsTendonTop" d="M 230 215 L 270 230" stroke="#E2E8F0" stroke-width="8" stroke-linecap="round"/>
+                            <!-- Tendon Lower (Dynamic) -->
+                            <path id="tricepsTendonBottom" d="M 410 230 L 445 215" stroke="#E2E8F0" stroke-width="8" stroke-linecap="round"/>
+                            <!-- Muscle Belly (Dynamic SVG Path) -->
+                            <path id="tricepsBelly" d="" fill="url(#tricepsRelaxed)" stroke="#1D4ED8" stroke-width="3" filter="url(#shadow)"/>
+                            <!-- Muscle Fiber Stripes -->
+                            <path id="tricepsFibers" d="" stroke="rgba(255,255,255,0.4)" stroke-width="2" fill="none" stroke-dasharray="4 4"/>
+                        </g>
+
+                        <!-- Elbow Joint Highlight Center -->
+                        <g id="jointGroup" class="cursor-pointer" onclick="selectPart('joint')">
+                            <circle cx="465" cy="200" r="18" fill="#3B82F6" fill-opacity="0.3" stroke="#2563EB" stroke-width="3" stroke-dasharray="3 3"/>
+                            <circle cx="465" cy="200" r="6" fill="#2563EB"/>
+                        </g>
+
+                        <!-- LABELS GROUP (Can be toggled) -->
+                        <g id="labelsGroup" class="transition-opacity duration-300">
+                            <!-- Biceps Label -->
+                            <g transform="translate(340, 100)">
+                                <rect x="-65" y="-18" width="130" height="34" rx="8" fill="#FEF2F2" stroke="#EF4444" stroke-width="2" filter="url(#shadow)"/>
+                                <text x="0" y="5" text-anchor="middle" font-weight="bold" font-size="14" fill="#991B1B">二頭肌 (Biceps)</text>
+                                <line x1="0" y1="16" x2="0" y2="45" stroke="#EF4444" stroke-width="2" stroke-dasharray="2 2"/>
+                                <circle cx="0" cy="45" r="3" fill="#EF4444"/>
+                            </g>
+
+                            <!-- Triceps Label -->
+                            <g transform="translate(340, 310)">
+                                <rect x="-65" y="-18" width="130" height="34" rx="8" fill="#EFF6FF" stroke="#2563EB" stroke-width="2" filter="url(#shadow)"/>
+                                <text x="0" y="5" text-anchor="middle" font-weight="bold" font-size="14" fill="#1E40AF">三頭肌 (Triceps)</text>
+                                <line x1="0" y1="-18" x2="0" y2="-45" stroke="#2563EB" stroke-width="2" stroke-dasharray="2 2"/>
+                                <circle cx="0" cy="-45" r="3" fill="#2563EB"/>
+                            </g>
+
+                            <!-- Humerus Label -->
+                            <g transform="translate(260, 260)">
+                                <rect x="-55" y="-15" width="110" height="30" rx="8" fill="#FFFBEB" stroke="#D97706" stroke-width="2"/>
+                                <text x="0" y="5" text-anchor="middle" font-weight="bold" font-size="13" fill="#92400E">肱骨 (上臂骨)</text>
+                                <path d="M 0 -15 L 0 -38" stroke="#D97706" stroke-width="1.5" stroke-dasharray="2 2"/>
+                            </g>
+
+                            <!-- Joint Label -->
+                            <g transform="translate(465, 120)">
+                                <rect x="-50" y="-15" width="100" height="30" rx="8" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2"/>
+                                <text x="0" y="5" text-anchor="middle" font-weight="bold" font-size="13" fill="#1E40AF">樞紐關節</text>
+                                <path d="M 0 15 L 0 62" stroke="#3B82F6" stroke-width="1.5" stroke-dasharray="2 2"/>
+                            </g>
+
+                            <!-- Forearm Label -->
+                            <g id="forearmLabelGroup" transform="translate(620, 260)">
+                                <rect x="-65" y="-15" width="130" height="30" rx="8" fill="#FFFBEB" stroke="#D97706" stroke-width="2"/>
+                                <text x="0" y="5" text-anchor="middle" font-weight="bold" font-size="13" fill="#92400E">尺骨與輻骨 (前臂)</text>
+                                <path d="M 0 -15 L 0 -40" stroke="#D97706" stroke-width="1.5" stroke-dasharray="2 2"/>
+                            </g>
+                        </g>
+
+                    </svg>
+
+                    <!-- Status Indicator Banner on top of SVG -->
+                    <div class="absolute bottom-3 left-3 right-3 flex justify-between items-center bg-white/90 backdrop-blur px-4 py-2.5 rounded-2xl shadow-md border border-slate-200">
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-xs md:text-sm text-slate-700">目前二頭肌 (紅)：</span>
+                            <span id="bicepsStatus" class="px-3 py-1 rounded-full text-xs font-black bg-red-500 text-white shadow-sm">
+                                正在收縮（變短、變粗）
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-xs md:text-sm text-slate-700">目前三頭肌 (藍)：</span>
+                            <span id="tricepsStatus" class="px-3 py-1 rounded-full text-xs font-black bg-blue-100 text-blue-900">
+                                正在舒張（變長、變細）
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls Section -->
+                <div class="w-full mt-5 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    
+                    <!-- Slider Control -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between font-bold text-sm text-slate-700">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-hand-back-fist text-amber-500"></i> 手臂伸展 (0°)</span>
+                            <span class="text-amber-600 font-extrabold">滑動拉桿控制角度</span>
+                            <span class="flex items-center gap-1.5">手臂完全彎曲 (120°) <i class="fa-solid fa-hand text-amber-500"></i></span>
+                        </div>
+                        <input type="range" id="angleSlider" min="0" max="120" value="45" class="w-full">
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap justify-center items-center gap-3 pt-1">
+                        <button id="playBtn" onclick="togglePlay()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-md transition-all flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-play"></i>
+                            <span id="playBtnText">自動播放動態運動</span>
+                        </button>
+
+                        <button onclick="setQuickAngle(0)" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                            完全伸直 (0°)
+                        </button>
+                        <button onclick="setQuickAngle(60)" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                            半彎曲 (60°)
+                        </button>
+                        <button onclick="setQuickAngle(110)" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                            完全彎曲 (110°)
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Right Column: Interactive Knowledge Cards & Quiz (5 cols on LG) -->
+        <section class="lg:col-span-5 space-y-6 flex flex-col">
+            
+            <!-- Dynamic Concept Explanation Card -->
+            <div id="conceptCard" class="glass-card rounded-3xl shadow-xl p-5 border-2 border-sky-200 relative overflow-hidden transition-all">
+                <div class="flex items-center gap-3 border-b border-slate-200 pb-3 mb-3">
+                    <div class="p-2 bg-sky-500 text-white rounded-xl shadow">
+                        <i class="fa-solid fa-lightbulb text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 id="conceptTitle" class="text-lg font-black text-slate-900">觀念小講堂：拮抗肌成對原理</h2>
+                        <p class="text-xs text-sky-600 font-bold">點擊圖表中的部位可查看詳細說明</p>
+                    </div>
+                </div>
+                
+                <div id="conceptContent" class="text-sm text-slate-700 leading-relaxed space-y-2">
+                    <p class="font-semibold text-slate-800">💡 為什麼肌肉需要成對運作？</p>
+                    <p>肌肉就像一根「橡皮筋」，它很強壯但<strong>只能主動「收縮（拉長骨骼）」</strong>，無法主動「推開骨骼」！</p>
+                    <p class="bg-amber-50 p-2.5 rounded-xl stroke-amber-200 text-amber-900 border border-amber-200">
+                        因此，人體的關節兩側通常會有至少兩組方向相反的肌肉（稱為<strong>拮抗肌</strong>）。當一邊主動用力變短時，另一邊就必須放鬆變長！
+                    </p>
+                </div>
+            </div>
+
+            <!-- Quiz Section -->
+            <div class="glass-card rounded-3xl shadow-xl p-5 border-2 border-indigo-200 flex-grow flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-indigo-600 text-white px-2.5 py-1 rounded-lg font-black text-xs">課堂快問快答</span>
+                            <h3 class="font-black text-slate-900 text-base">小試身手考考你</h3>
+                        </div>
+                        <span id="quizScore" class="text-xs font-bold bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-full">得分: 0/0</span>
+                    </div>
+
+                    <!-- Question Container -->
+                    <div id="quizContainer" class="space-y-4">
+                        <p id="quizQuestion" class="font-bold text-slate-800 text-base leading-snug">
+                            載入中...
+                        </p>
+
+                        <!-- Options -->
+                        <div id="quizOptions" class="space-y-2.5">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Feedback Box -->
+                    <div id="quizFeedback" class="hidden mt-4 p-3 rounded-2xl text-xs font-bold transition-all">
+                    </div>
+                </div>
+
+                <!-- Next Question Button -->
+                <button id="nextQuizBtn" onclick="loadNextQuiz()" class="mt-4 w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow text-sm transition flex items-center justify-center gap-2">
+                    <span>下一題</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-slate-300 py-4 px-6 text-center text-xs font-medium border-t border-slate-700">
+        <p>國小自然與生活科技領域 輔助教學網頁 | Designed for Primary School Science Education</p>
+    </footer>
+
+    <!-- JavaScript Engine -->
+    <script>
+        // Global State variables
+        let armAngle = 45; // Default 45 degrees
+        let isPlaying = false;
+        let animationFrameId = null;
+        let playDirection = 1; // 1 for expanding angle, -1 for decreasing angle
+        let showLabels = true;
+
+        // Interactive Quiz Data suitable for Elementary Students
+        const quizData = [
+            {
+                q: "當我們把手臂彎曲抬起重物時，手臂上方的「二頭肌」會發生什麼變化？",
+                options: [
+                    "A. 肌肉收縮，變得又短又粗又硬",
+                    "B. 肌肉舒張，變得又長又細",
+                    "C. 完全沒有變化",
+                    "D. 肌肉會直接鬆開脫落"
+                ],
+                answer: 0,
+                explain: "答對了！當手臂彎曲時，二頭肌主動用力「收縮」，所以會變短、變粗且變硬來拉動手臂骨骼。"
+            },
+            {
+                q: "自然課中提到的「拮抗肌」是指什麼意思？",
+                options: [
+                    "A. 會互相打架受傷的肌肉",
+                    "B. 成對運作、作用方向相反的兩組肌肉",
+                    "C. 人體內最堅硬的骨骼部位",
+                    "D. 專門用來跑步伸展的腳部肌肉"
+                ],
+                answer: 1,
+                explain: "非常好！因為肌肉只能「拉」不能「推」，所以需要兩組作用相反的肌肉成對合作，才能控制關節來回運動。"
+            },
+            {
+                q: "當手臂「完全伸直（手臂打直）」時，手臂下方的「三頭肌」狀態是？",
+                options: [
+                    "A. 正在舒張變長",
+                    "B. 正在用力收縮變短",
+                    "C. 已經停止工作",
+                    "D. 變粗並向上擠壓"
+                ],
+                answer: 1,
+                explain: "棒極了！手臂伸直時，換成下方的「三頭肌」用力收縮變短，將前臂骨骼往後拉直。"
+            },
+            {
+                q: "肌肉是用什麼構造牢牢連接在骨骼上的呢？",
+                options: [
+                    "A. 關節",
+                    "B. 軟骨",
+                    "C. 肌腱（韌帶與腱）",
+                    "D. 神經"
+                ],
+                answer: 2,
+                explain: "正確！肌肉的兩端有強韌的「肌腱」，能夠把肌肉產生的拉力傳導到骨骼上，帶動骨骼移動。"
+            }
+        ];
+
+        let currentQuizIndex = 0;
+        let totalAnswered = 0;
+        let correctAnswered = 0;
+
+        // Concept Explanations mapped by part ID
+        const conceptDetails = {
+            biceps: {
+                title: "手臂上方：二頭肌 (Biceps)",
+                text: "【屈肌】當你彎曲手臂（握拳屈肘）時，二頭肌會收到神經指令進行<b>「收縮」</b>！此時肌肉會變得較短、較厚且硬邦邦的，並拉動前臂的骨骼往上抬。"
+            },
+            triceps: {
+                title: "手臂下方：三頭肌 (Triceps)",
+                text: "【伸肌】當你把手臂伸直時，三頭肌會收到指令進行<b>「收縮」</b>，將前臂向後拉直；而在手臂彎曲時，三頭肌則處於<b>「舒張（放鬆變長）」</b>的狀態。"
+            },
+            humerus: {
+                title: "上臂骨骼：肱骨 (Humerus)",
+                text: "這是我們上臂最主要的長骨。肌肉附著在肱骨上，以關節為支點，像槓桿原理一樣帶動前臂進行運動。"
+            },
+            radius: {
+                title: "前臂骨骼：尺骨與輻骨",
+                text: "前臂包含兩根並排的骨骼（尺骨與槓骨/輻骨）。當二頭肌收縮拉動肌腱時，這兩根骨骼就會被往上提拉。"
+            },
+            joint: {
+                title: "關節部位：樞紐關節 (Hinge Joint)",
+                text: "肘關節是一種「樞紐關節」，就像門的合頁一樣，主要允許開合（屈曲與伸展）的單向旋轉運動。"
+            }
+        };
+
+        // Initialize Application on Page Load
+        window.onload = function() {
+            setupEventListeners();
+            updateArmModel(armAngle);
+            loadQuizQuestion(currentQuizIndex);
+        };
+
+        // Set Up Event Listeners
+        function setupEventListeners() {
+            const slider = document.getElementById('angleSlider');
+            slider.addEventListener('input', (e) => {
+                if (isPlaying) stopPlay();
+                armAngle = parseFloat(e.target.value);
+                updateArmModel(armAngle);
+            });
+        }
+
+        // Core Mathematical Render Function for Arm SVG Dynamics
+        function updateArmModel(angleDeg) {
+            // angleDeg: 0 (fully extended horizontally) to 120 (flexed upwards)
+            const angleRad = (angleDeg * Math.PI) / 180;
+
+            // Fixed Elbow Joint Pivot Point
+            const pivotX = 465;
+            const pivotY = 200;
+            const forearmLength = 250;
+
+            // Update Forearm Group Rotation
+            // In SVG, positive rotation is clockwise. We want flexing up, so -angleDeg
+            const forearmGroup = document.getElementById('forearmGroup');
+            forearmGroup.setAttribute('transform', `rotate(${-angleDeg}, ${pivotX}, ${pivotY})`);
+
+            // Update Forearm Label Rotation so it stays aligned with arm or readable
+            const forearmLabelGroup = document.getElementById('forearmLabelGroup');
+            if (forearmLabelGroup) {
+                // Keep label readable
+                const endX = pivotX + Math.cos(-angleRad) * 160;
+                const endY = pivotY + Math.sin(-angleRad) * 160;
+                forearmLabelGroup.setAttribute('transform', `translate(${endX}, ${endY + 60})`);
+            }
+
+            // Calculate Dynamic Attachment Position of Biceps Tendon on Forearm (in World Coordinates)
+            // Local attachment on forearm before rotation is at relative distance r=55px along bone (465+55 = 520, y=190)
+            const bicepsAttachLocalX = 55;
+            const bicepsAttachLocalY = -10;
+            const currentBicepsAttachX = pivotX + bicepsAttachLocalX * Math.cos(-angleRad) - bicepsAttachLocalY * Math.sin(-angleRad);
+            const currentBicepsAttachY = pivotY + bicepsAttachLocalX * Math.sin(-angleRad) + bicepsAttachLocalY * Math.cos(-angleRad);
+
+            // Calculate Dynamic Attachment Position of Triceps Tendon on Forearm
+            // Local attachment behind joint: x=-20, y=15
+            const tricepsAttachLocalX = -20;
+            const tricepsAttachLocalY = 15;
+            const currentTricepsAttachX = pivotX + tricepsAttachLocalX * Math.cos(-angleRad) - tricepsAttachLocalY * Math.sin(-angleRad);
+            const currentTricepsAttachY = pivotY + tricepsAttachLocalX * Math.sin(-angleRad) + tricepsAttachLocalY * Math.cos(-angleRad);
+
+            // BICEPS calculations (FLEXOR)
+            // As angle increases (flexion), Biceps contracts -> thicker bulge, shorter length
+            const bicepsOriginX = 260;
+            const bicepsOriginY = 170;
+            
+            // Update Tendon Path for Biceps
+            const bicepsTendonBottom = document.getElementById('bicepsTendonBottom');
+            // Connect muscle belly end to dynamic attachment
+            const bicepsMidBellyEndX = 370 + (angleDeg / 120) * 10;
+            const bicepsMidBellyEndY = 165 - (angleDeg / 120) * 15;
+            bicepsTendonBottom.setAttribute('d', `M ${bicepsMidBellyEndX} ${bicepsMidBellyEndY} L ${currentBicepsAttachX} ${currentBicepsAttachY}`);
+
+            // Dynamic Biceps Muscle Shape Path
+            // Thickness increases with flexion angle
+            const bicepsThickness = 22 + (angleDeg / 120) * 26; // 22px relaxed -> 48px contracted
+            const bBellyStartX = 260;
+            const bBellyStartY = 170;
+            const bBellyEndX = bicepsMidBellyEndX;
+            const bBellyEndY = bicepsMidBellyEndY;
+
+            const bMidX = (bBellyStartX + bBellyEndX) / 2;
+            const bMidY = (bBellyStartY + bBellyEndY) / 2 - bicepsThickness;
+
+            // Curve path for realistic muscle belly bulge
+            const bicepsPathD = `M ${bBellyStartX} ${bBellyStartY + 5} 
+                                Q ${bMidX} ${bMidY - 10} ${bBellyEndX} ${bBellyEndY - 4}
+                                Q ${bMidX} ${bMidY + bicepsThickness * 1.6} ${bBellyStartX} ${bBellyStartY + 15} Z`;
+            
+            const bicepsBelly = document.getElementById('bicepsBelly');
+            bicepsBelly.setAttribute('d', bicepsPathD);
+            bicepsBelly.setAttribute('fill', angleDeg > 40 ? 'url(#bicepsContracted)' : 'url(#bicepsRelaxed)');
+
+            const bicepsFibers = document.getElementById('bicepsFibers');
+            bicepsFibers.setAttribute('d', `M ${bBellyStartX + 20} ${bBellyStartY + 8} Q ${bMidX} ${bMidY + 5} ${bBellyEndX - 20} ${bBellyEndY}`);
+
+            // TRICEPS calculations (EXTENSOR)
+            // As angle increases, Triceps stretches -> thinner bulge, longer length
+            const tricepsThickness = 36 - (angleDeg / 120) * 20; // 36px contracted -> 16px stretched
+            const tBellyStartX = 270;
+            const tBellyStartY = 230;
+            const tBellyEndX = 410;
+            const tBellyEndY = 230;
+
+            const tMidX = (tBellyStartX + tBellyEndX) / 2;
+            const tMidY = (tBellyStartY + tBellyEndY) / 2 + tricepsThickness;
+
+            const tricepsPathD = `M ${tBellyStartX} ${tBellyStartY - 5} 
+                                 Q ${tMidX} ${tMidY + 10} ${tBellyEndX} ${tBellyEndY + 4}
+                                 Q ${tMidX} ${tMidY - tricepsThickness * 1.4} ${tBellyStartX} ${tBellyStartY - 15} Z`;
+
+            const tricepsBelly = document.getElementById('tricepsBelly');
+            tricepsBelly.setAttribute('d', tricepsPathD);
+            tricepsBelly.setAttribute('fill', angleDeg < 40 ? 'url(#tricepsContracted)' : 'url(#tricepsRelaxed)');
+
+            const tricepsTendonBottom = document.getElementById('tricepsTendonBottom');
+            tricepsTendonBottom.setAttribute('d', `M ${tBellyEndX} ${tBellyEndY} L ${currentTricepsAttachX} ${currentTricepsAttachY}`);
+
+            const tricepsFibers = document.getElementById('tricepsFibers');
+            tricepsFibers.setAttribute('d', `M ${tBellyStartX + 20} ${tBellyStartY - 5} Q ${tMidX} ${tMidY - 2} ${tBellyEndX - 20} ${tBellyEndY}`);
+
+            // Update UI Indicators
+            document.getElementById('angleDisplay').innerText = `彎曲角度: ${Math.round(angleDeg)}°`;
+            document.getElementById('angleSlider').value = angleDeg;
+
+            // Update Muscle Status Badges
+            const bicepsStatus = document.getElementById('bicepsStatus');
+            const tricepsStatus = document.getElementById('tricepsStatus');
+
+            if (angleDeg > 60) {
+                bicepsStatus.innerText = "強烈收縮（變短、變粗）";
+                bicepsStatus.className = "px-3 py-1 rounded-full text-xs font-black bg-red-600 text-white shadow contracting-glow";
+                
+                tricepsStatus.innerText = "完全舒張（被拉長、變細）";
+                tricepsStatus.className = "px-3 py-1 rounded-full text-xs font-black bg-blue-100 text-blue-800 border border-blue-200";
+            } else if (angleDeg < 25) {
+                bicepsStatus.innerText = "完全舒張（被拉長、變細）";
+                bicepsStatus.className = "px-3 py-1 rounded-full text-xs font-black bg-slate-200 text-slate-700";
+
+                tricepsStatus.innerText = "用力收縮（變短、變粗）";
+                tricepsStatus.className = "px-3 py-1 rounded-full text-xs font-black bg-blue-600 text-white shadow contracting-glow-blue";
+            } else {
+                bicepsStatus.innerText = "適度收縮中";
+                bicepsStatus.className = "px-3 py-1 rounded-full text-xs font-black bg-amber-500 text-white";
+
+                tricepsStatus.innerText = "適度舒張中";
+                tricepsStatus.className = "px-3 py-1 rounded-full text-xs font-black bg-sky-100 text-sky-800 border border-sky-300";
+            }
+        }
+
+        // Toggle Animation Auto Playback Loop
+        function togglePlay() {
+            if (isPlaying) {
+                stopPlay();
+            } else {
+                startPlay();
+            }
+        }
+
+        function startPlay() {
+            isPlaying = true;
+            document.getElementById('playBtnText').innerText = "暫停播放";
+            document.getElementById('playBtn').className = "px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition-all flex items-center gap-2 text-sm";
+            document.getElementById('playBtn').querySelector('i').className = "fa-solid fa-pause";
+            
+            function animateLoop() {
+                if (!isPlaying) return;
+                
+                armAngle += playDirection * 1.2;
+                if (armAngle >= 115) {
+                    armAngle = 115;
+                    playDirection = -1;
+                } else if (armAngle <= 5) {
+                    armAngle = 5;
+                    playDirection = 1;
+                }
+
+                updateArmModel(armAngle);
+                animationFrameId = requestAnimationFrame(animateLoop);
+            }
+
+            animationFrameId = requestAnimationFrame(animateLoop);
+        }
+
+        function stopPlay() {
+            isPlaying = false;
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            document.getElementById('playBtnText').innerText = "自動播放動態運動";
+            document.getElementById('playBtn').className = "px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-md transition-all flex items-center gap-2 text-sm";
+            document.getElementById('playBtn').querySelector('i').className = "fa-solid fa-play";
+        }
+
+        // Quick Preset Angles
+        function setQuickAngle(deg) {
+            if (isPlaying) stopPlay();
+            armAngle = deg;
+            updateArmModel(armAngle);
+        }
+
+        // Reset Model
+        function resetModel() {
+            setQuickAngle(45);
+        }
+
+        // Toggle Visibility of Labels
+        function toggleLabels() {
+            showLabels = !showLabels;
+            const labelsGroup = document.getElementById('labelsGroup');
+            const btnText = document.getElementById('labelBtnText');
+            
+            if (showLabels) {
+                labelsGroup.style.opacity = '1';
+                labelsGroup.style.pointerEvents = 'auto';
+                btnText.innerText = "隱藏構造標籤";
+            } else {
+                labelsGroup.style.opacity = '0';
+                labelsGroup.style.pointerEvents = 'none';
+                btnText.innerText = "顯示構造標籤";
+            }
+        }
+
+        // Display Detailed Concept Card when User Clicks a Anatomical Part
+        function selectPart(partId) {
+            const data = conceptDetails[partId];
+            if (!data) return;
+
+            const conceptCard = document.getElementById('conceptCard');
+            const conceptTitle = document.getElementById('conceptTitle');
+            const conceptContent = document.getElementById('conceptContent');
+
+            conceptTitle.innerText = data.title;
+            conceptContent.innerHTML = `<p class="text-slate-800 leading-relaxed font-medium">${data.text}</p>`;
+
+            // Highlight animation for card
+            conceptCard.classList.remove('border-sky-200');
+            conceptCard.classList.add('border-amber-400', 'ring-4', 'ring-amber-200');
+            setTimeout(() => {
+                conceptCard.classList.remove('ring-4', 'ring-amber-200');
+            }, 600);
+        }
+
+        // Interactive Quiz Logic
+        function loadQuizQuestion(index) {
+            const quiz = quizData[index];
+            document.getElementById('quizQuestion').innerText = `${index + 1}. ${quiz.q}`;
+            
+            const optionsContainer = document.getElementById('quizOptions');
+            optionsContainer.innerHTML = '';
+
+            quiz.options.forEach((optText, optIdx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-3 rounded-xl border-2 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/50 font-semibold text-xs md:text-sm text-slate-700 transition flex items-center justify-between";
+                btn.innerText = optText;
+                btn.onclick = () => checkQuizAnswer(optIdx, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('quizFeedback').className = "hidden mt-4 p-3 rounded-2xl text-xs font-bold transition-all";
+        }
+
+        function checkQuizAnswer(selectedIdx, btnElement) {
+            const quiz = quizData[currentQuizIndex];
+            const feedback = document.getElementById('quizFeedback');
+            const allOptionBtns = document.getElementById('quizOptions').children;
+
+            // Disable all buttons after choice
+            for (let b of allOptionBtns) {
+                b.disabled = true;
+                b.classList.add('opacity-60', 'cursor-not-allowed');
+            }
+
+            totalAnswered++;
+
+            if (selectedIdx === quiz.answer) {
+                correctAnswered++;
+                btnElement.classList.remove('border-slate-200', 'opacity-60');
+                btnElement.classList.add('border-emerald-500', 'bg-emerald-100', 'text-emerald-900', 'opacity-100');
+                
+                feedback.className = "mt-4 p-3.5 rounded-2xl text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 block";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 text-sm mr-1"></i> ${quiz.explain}`;
+            } else {
+                btnElement.classList.remove('border-slate-200', 'opacity-60');
+                btnElement.classList.add('border-red-500', 'bg-red-100', 'text-red-900', 'opacity-100');
+
+                // Highlight correct one
+                allOptionBtns[quiz.answer].classList.remove('opacity-60');
+                allOptionBtns[quiz.answer].classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-800');
+
+                feedback.className = "mt-4 p-3.5 rounded-2xl text-xs font-bold bg-red-100 text-red-900 border border-red-300 block";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-xmark text-red-600 text-sm mr-1"></i> 答錯囉！觀念補充：${quiz.explain}`;
+            }
+
+            document.getElementById('quizScore').innerText = `得分: ${correctAnswered}/${totalAnswered}`;
+        }
+
+        function loadNextQuiz() {
+            currentQuizIndex = (currentQuizIndex + 1) % quizData.length;
+            loadQuizQuestion(currentQuizIndex);
+        }
+    </script>
+</body>
+</html>
